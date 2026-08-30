@@ -1,10 +1,10 @@
 display_information:
-  name: 匿名質問
+  name: SottoQ
   description: 匿名で質問・回答できる Slack アプリ
   background_color: "#2c2d30"
 features:
   bot_user:
-    display_name: 匿名質問
+    display_name: SottoQ
     always_online: true
   slash_commands:
     - command: /ask

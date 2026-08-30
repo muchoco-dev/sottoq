@@ -1,9 +1,9 @@
 {
-  "name": "anonymous-question-slack-app",
+  "name": "sottoq",
   "version": "0.1.0",
   "private": true,
   "license": "GPL-3.0-or-later",
-  "description": "匿名で質問・回答できる Slack アプリ",
+  "description": "SottoQ — 匿名で質問・回答できる Slack アプリ",
   "type": "module",
   "engines": {
     "node": ">=20"

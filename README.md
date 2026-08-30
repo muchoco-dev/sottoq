@@ -1,4 +1,4 @@
-# 匿名質問 Slack アプリ
+# SottoQ
 
 シャイなコミュニティメンバー同士でも気軽に質問・回答できる Slack アプリです。
 
@@ -28,8 +28,8 @@
 ### 1. リポジトリ
 
 ```bash
-git clone https://github.com/muchoco-dev/anonymous-question-slack-app.git
-cd anonymous-question-slack-app
+git clone https://github.com/muchoco-dev/sottoq.git
+cd sottoq
 cp .env.example .env
 ```
 

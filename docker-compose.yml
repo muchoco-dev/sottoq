@@ -3,7 +3,7 @@ services:
     image: mariadb:11
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: anonymous_questions
+      MYSQL_DATABASE: sottoq
       MYSQL_USER: app
       MYSQL_PASSWORD: app
       TZ: Asia/Tokyo
@@ -29,7 +29,7 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: mysql://app:app@db:3306/anonymous_questions
+      DATABASE_URL: mysql://app:app@db:3306/sottoq
       TZ: Asia/Tokyo
       SLACK_SOCKET_MODE: "0"
 
