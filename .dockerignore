@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+.git
+*.md
+1.構想.md
+2.技術構成.md
+3.匿名性・識別情報の方針.md
+4.DM送信・投稿タイミング.md

@@ -1,0 +1,30 @@
+display_information:
+  name: 匿名質問
+  description: 匿名で質問・回答できる Slack アプリ
+  background_color: "#2c2d30"
+features:
+  bot_user:
+    display_name: 匿名質問
+    always_online: true
+  slash_commands:
+    - command: /ask
+      url: https://example.com/slack/events
+      description: 匿名で質問する
+      should_escape: false
+oauth_config:
+  scopes:
+    bot:
+      - commands
+      - chat:write
+      - chat:write.public
+      - im:write
+      - users:read
+settings:
+  event_subscriptions:
+    request_url: https://example.com/slack/events
+  interactivity:
+    is_enabled: true
+    request_url: https://example.com/slack/events
+  org_deploy_enabled: false
+  socket_mode_enabled: true
+  token_rotation_enabled: false

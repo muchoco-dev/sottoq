@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum ModerationStatus {
+  pending
+  approved
+  rejected
+}
+
+model Question {
+  id             Int                 @id @default(autoincrement())
+  body           String              @db.Text
+  status         ModerationStatus    @default(pending)
+  createdAt      DateTime            @default(now()) @map("created_at")
+  moderatedAt    DateTime?           @map("moderated_at")
+  closedAt       DateTime?           @map("closed_at")
+  recipientCount Int?                @map("recipient_count")
+  answerCount    Int?                @map("answer_count")
+  recipients     QuestionRecipient[]
+  answers        Answer[]
+
+  @@index([status, closedAt, createdAt])
+  @@map("questions")
+}
+
+model QuestionRecipient {
+  id            Int      @id @default(autoincrement())
+  questionId    Int      @map("question_id")
+  recipientHash String   @map("recipient_hash") @db.Char(64)
+  sentAt        DateTime @default(now()) @map("sent_at")
+  question      Question @relation(fields: [questionId], references: [id])
+
+  @@unique([questionId, recipientHash])
+  @@map("question_recipients")
+}
+
+model Answer {
+  id                  Int              @id @default(autoincrement())
+  questionId          Int              @map("question_id")
+  body                String           @db.Text
+  isAnonymous         Boolean          @map("is_anonymous")
+  answererSlackUserId String?          @map("answerer_slack_user_id") @db.VarChar(32)
+  status              ModerationStatus @default(pending)
+  postedAt            DateTime?        @map("posted_at")
+  createdAt           DateTime         @default(now()) @map("created_at")
+  question            Question         @relation(fields: [questionId], references: [id])
+
+  @@index([status, postedAt, createdAt])
+  @@map("answers")
+}
