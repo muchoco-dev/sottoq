@@ -1,0 +1,10 @@
+---
+description: Do not read .env or other secret env files
+alwaysApply: true
+---
+
+# Do not read env secrets
+
+- Do not read `.env`, `.env.local`, or other secret env files.
+- Do not print their contents via the terminal (`cat`, `head`, `grep`, type, Get-Content, etc.).
+- `.env.example` is a template without secrets and may be read.

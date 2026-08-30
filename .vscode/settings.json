@@ -1,0 +1,7 @@
+{
+  "cursor.general.globalCursorIgnoreList": [
+    "**/.env",
+    "**/.env.*",
+    "!**/.env.example"
+  ]
+}

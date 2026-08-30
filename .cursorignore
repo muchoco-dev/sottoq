@@ -1,0 +1,5 @@
+# Cursor Agent / Tab / @mention からシークレットを隠す
+# （.gitignore だけでは Agent の Read を止められない）
+.env
+.env.*
+!.env.example
