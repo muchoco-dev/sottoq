@@ -19,6 +19,13 @@ export type SlackApi = {
     members: SlackMember[];
     nextCursor?: string;
   }>;
+  conversationsMembers: (
+    channelId: string,
+    cursor?: string,
+  ) => Promise<{
+    memberIds: string[];
+    nextCursor?: string;
+  }>;
   conversationsOpen: (userId: string) => Promise<{ channelId: string }>;
   postMessage: (args: {
     channel: string;

@@ -11,7 +11,7 @@
 
 1. `/ask` で質問を投稿する（承認待ち）
 2. 管理者が DB で質問を承認する
-3. 毎日 9:00 と 20:00（Asia/Tokyo）に、募集中の質問をワークスペースのメンバーからランダム 5 人へ DM する
+3. 毎日 9:00 と 20:00（Asia/Tokyo）に、募集中の質問を掲載先チャンネルのメンバーからランダム 5 人へ DM する
 4. 受信者は「回答する」から匿名または記名で回答する（承認待ち）
 5. 管理者が DB で回答を承認する
 6. 毎日 12:00 と 20:30 に、未投稿の承認済み回答を最大 3 件、10 分間隔で公開チャンネルへ投稿する
@@ -43,7 +43,7 @@ openssl rand -hex 32
 
 1. [api.slack.com/apps](https://api.slack.com/apps) でアプリを作成する
 2. `slack-manifest.yaml` をインポートするか、同等の設定を手で入れる
-3. Bot Token Scopes: `commands`, `chat:write`, `chat:write.public`, `im:write`, `users:read`
+3. Bot Token Scopes: `commands`, `chat:write`, `chat:write.public`, `im:write`, `users:read`, `channels:read`, `groups:read`
 4. スラッシュコマンド `/ask`（説明: 匿名で質問する）
 5. Interactivity を有効にする
 6. ローカルは Socket Mode を推奨（App-Level Token に `connections:write`）

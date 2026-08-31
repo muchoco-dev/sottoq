@@ -25,6 +25,7 @@ export function createConfig(overrides: Partial<AppConfig> = {}): AppConfig {
 export function createSlackMock(overrides: Partial<SlackApi> = {}): SlackApi {
   return {
     usersList: vi.fn(async () => ({ members: [] })),
+    conversationsMembers: vi.fn(async () => ({ memberIds: [] })),
     conversationsOpen: vi.fn(async (userId) => ({ channelId: `D-${userId}` })),
     postMessage: vi.fn(async () => undefined),
     postEphemeral: vi.fn(async () => undefined),

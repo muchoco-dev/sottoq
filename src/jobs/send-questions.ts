@@ -4,7 +4,7 @@ import {
 } from "../constants.js";
 import { isRecruiting } from "../recruitment/rules.js";
 import { selectRecipients } from "../recruitment/select.js";
-import { listAllMembers } from "../slack/api.js";
+import { listChannelMembers } from "../slack/api.js";
 import { buildQuestionDm } from "../slack/dm.js";
 import { closeExpiredRecruitments } from "./close-recruitment.js";
 import type { Deps } from "../types.js";
@@ -39,7 +39,10 @@ export async function sendQuestions(deps: Deps): Promise<{
     return { sent: 0, questions: 0 };
   }
 
-  const members = await listAllMembers(deps.slack);
+  const members = await listChannelMembers(
+    deps.slack,
+    deps.config.slackChannelId,
+  );
   const { botUserId } = await deps.slack.authTest();
 
   let sent = 0;

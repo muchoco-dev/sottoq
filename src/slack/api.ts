@@ -10,6 +10,17 @@ export function createSlackApi(client: WebClient): SlackApi {
         nextCursor: res.response_metadata?.next_cursor || undefined,
       };
     },
+    async conversationsMembers(channelId, cursor) {
+      const res = await client.conversations.members({
+        channel: channelId,
+        cursor,
+        limit: 200,
+      });
+      return {
+        memberIds: res.members ?? [],
+        nextCursor: res.response_metadata?.next_cursor || undefined,
+      };
+    },
     async conversationsOpen(userId) {
       const res = await client.conversations.open({ users: userId });
       const channelId = res.channel?.id;
@@ -58,4 +69,22 @@ export async function listAllMembers(slack: SlackApi): Promise<SlackMember[]> {
     cursor = page.nextCursor;
   } while (cursor);
   return members;
+}
+
+export async function listChannelMembers(
+  slack: SlackApi,
+  channelId: string,
+): Promise<SlackMember[]> {
+  const memberIds = new Set<string>();
+  let cursor: string | undefined;
+  do {
+    const page = await slack.conversationsMembers(channelId, cursor);
+    for (const id of page.memberIds) {
+      memberIds.add(id);
+    }
+    cursor = page.nextCursor;
+  } while (cursor);
+
+  const members = await listAllMembers(slack);
+  return members.filter((member) => member.id && memberIds.has(member.id));
 }

@@ -29,6 +29,9 @@ describe("sendQuestions", () => {
     db.questionRecipient.create.mockResolvedValue({});
 
     const slack = createSlackMock({
+      conversationsMembers: async () => ({
+        memberIds: ["U1", "U2", "B0TB0T", "USLACKBOT"],
+      }),
       usersList: async () => ({
         members: [
           { id: "U1" },
@@ -74,6 +77,7 @@ describe("sendQuestions", () => {
       },
     ]);
     const slack = createSlackMock({
+      conversationsMembers: async () => ({ memberIds: ["U2"] }),
       usersList: async () => ({ members: [{ id: "U2" }] }),
       postMessage: async () => {
         throw new Error("rate limited");
@@ -109,5 +113,43 @@ describe("sendQuestions", () => {
 
     expect(result).toEqual({ sent: 0, questions: 0 });
     expect(slack.postMessage).not.toHaveBeenCalled();
+  });
+
+  it("does not send to workspace members outside the posting channel", async () => {
+    const db = createPrismaMock();
+    db.question.findMany.mockResolvedValue([
+      {
+        id: 1,
+        body: "質問です",
+        status: "approved",
+        closedAt: null,
+        createdAt: now,
+        answers: [],
+        recipients: [],
+      },
+    ]);
+    db.questionRecipient.create.mockResolvedValue({});
+
+    const slack = createSlackMock({
+      conversationsMembers: async () => ({ memberIds: ["U2"] }),
+      usersList: async () => ({
+        members: [{ id: "U2" }, { id: "U3" }],
+      }),
+    });
+
+    const result = await sendQuestions({
+      db: db as never,
+      slack,
+      config: createConfig({ hmacSecret }),
+      logger: createLogger(),
+      now: () => now,
+      dmIntervalMs: 0,
+      random: () => 0,
+    });
+
+    expect(result.sent).toBe(1);
+    expect(slack.conversationsOpen).toHaveBeenCalledWith("U2");
+    expect(slack.conversationsOpen).not.toHaveBeenCalledWith("U3");
+    expect(slack.postMessage).toHaveBeenCalledTimes(1);
   });
 });
