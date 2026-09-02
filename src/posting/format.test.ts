@@ -10,10 +10,20 @@ describe("formatChannelPost", () => {
         isAnonymous: true,
         answererSlackUserId: null,
       }),
-    ).toBe("Q. 好きな飲み物は？\n\nA.\n水です");
+    ).toBe(
+      [
+        "そっと届いた質問に、誰かが答えてくれました 🙌",
+        "",
+        "> 好きな飲み物は？",
+        "",
+        "**回答**",
+        "",
+        "> 水です",
+      ].join("\n"),
+    );
   });
 
-  it("formats a named answer with さん after the mention", () => {
+  it("formats a named answer with the mention in the intro", () => {
     expect(
       formatChannelPost({
         questionBody: "好きな飲み物は？",
@@ -21,7 +31,17 @@ describe("formatChannelPost", () => {
         isAnonymous: false,
         answererSlackUserId: "U123",
       }),
-    ).toBe("Q. 好きな飲み物は？\n\nA. <@U123> さん\nコーヒーです");
+    ).toBe(
+      [
+        "そっと届いた質問に、<@U123>さんが答えてくれました 🙌",
+        "",
+        "> 好きな飲み物は？",
+        "",
+        "**回答**",
+        "",
+        "> コーヒーです",
+      ].join("\n"),
+    );
   });
 
   it("treats missing user id as anonymous even if isAnonymous is false", () => {
@@ -32,6 +52,39 @@ describe("formatChannelPost", () => {
         isAnonymous: false,
         answererSlackUserId: null,
       }),
-    ).toBe("Q. Q1\n\nA.\nA1");
+    ).toBe(
+      [
+        "そっと届いた質問に、誰かが答えてくれました 🙌",
+        "",
+        "> Q1",
+        "",
+        "**回答**",
+        "",
+        "> A1",
+      ].join("\n"),
+    );
+  });
+
+  it("quotes each line of multiline questions and answers", () => {
+    expect(
+      formatChannelPost({
+        questionBody: "1行目\n2行目",
+        answerBody: "A1\nA2",
+        isAnonymous: true,
+        answererSlackUserId: null,
+      }),
+    ).toBe(
+      [
+        "そっと届いた質問に、誰かが答えてくれました 🙌",
+        "",
+        "> 1行目",
+        "> 2行目",
+        "",
+        "**回答**",
+        "",
+        "> A1",
+        "> A2",
+      ].join("\n"),
+    );
   });
 });

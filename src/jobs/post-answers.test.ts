@@ -10,7 +10,7 @@ import {
 const now = new Date("2026-08-10T12:00:00+09:00");
 
 describe("postApprovedAnswers", () => {
-  it("posts oldest unposted approved answers, max 3, and formats Q/A", async () => {
+  it("posts oldest unposted approved answers, max 3, and formats the intro copy", async () => {
     const db = createPrismaMock();
     const slack = createSlackMock();
     db.answer.findMany.mockResolvedValue([
@@ -52,11 +52,27 @@ describe("postApprovedAnswers", () => {
     );
     expect(slack.postMessage).toHaveBeenNthCalledWith(1, {
       channel: "C123",
-      text: "Q. 好きな飲み物は？\n\nA.\n水です",
+      text: [
+        "そっと届いた質問に、誰かが答えてくれました 🙌",
+        "",
+        "> 好きな飲み物は？",
+        "",
+        "**回答**",
+        "",
+        "> 水です",
+      ].join("\n"),
     });
     expect(slack.postMessage).toHaveBeenNthCalledWith(2, {
       channel: "C123",
-      text: "Q. 好きな飲み物は？\n\nA. <@U123> さん\nコーヒーです",
+      text: [
+        "そっと届いた質問に、<@U123>さんが答えてくれました 🙌",
+        "",
+        "> 好きな飲み物は？",
+        "",
+        "**回答**",
+        "",
+        "> コーヒーです",
+      ].join("\n"),
     });
     expect(db.answer.update).toHaveBeenCalledWith({
       where: { id: 1 },
