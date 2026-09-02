@@ -62,7 +62,7 @@ export function registerAskHandlers(
         await deps.slack.postEphemeral({
           channel: meta.channelId,
           user: userId,
-          text: "質問を受け付けました。承認後にメンバーへ届きます",
+          text: "質問を受け付けました！回答が届いたら #01_質問 チャンネルに投稿されます。",
         });
       } catch {
         deps.logger.error("failed to send question receipt");
