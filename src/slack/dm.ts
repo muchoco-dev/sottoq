@@ -18,7 +18,7 @@ export function buildQuestionDm(questionId: number, questionBody: string): {
   ].join("\n");
   const quotedQuestion = quoteQuestion(questionBody);
   const outro = [
-    "回答すると #04_質問 チャンネルに投稿されます。",
+    "回答すると #01_質問 チャンネルに投稿されます。",
     "あなたの考えや経験を教えてください🙌",
   ].join("\n");
   const text = [intro, "", quotedQuestion, "", outro].join("\n");

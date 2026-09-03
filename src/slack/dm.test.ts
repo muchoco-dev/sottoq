@@ -11,7 +11,7 @@ describe("buildQuestionDm", () => {
     ].join("\n");
     const quotedQuestion = "> 好きな飲み物は？";
     const outro = [
-      "回答すると #04_質問 チャンネルに投稿されます。",
+      "回答すると #01_質問 チャンネルに投稿されます。",
       "あなたの考えや経験を教えてください🙌",
     ].join("\n");
 
