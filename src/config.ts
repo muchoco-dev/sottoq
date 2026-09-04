@@ -28,5 +28,6 @@ export function loadConfig(): AppConfig {
     port: Number(process.env.PORT ?? 3000),
     timezone: process.env.TZ ?? "Asia/Tokyo",
     socketMode,
+    adminApiToken: process.env.ADMIN_API_TOKEN || undefined,
   };
 }

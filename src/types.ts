@@ -51,6 +51,7 @@ export type AppConfig = {
   port: number;
   timezone: string;
   socketMode: boolean;
+  adminApiToken?: string;
 };
 
 export type Db = PrismaClient;

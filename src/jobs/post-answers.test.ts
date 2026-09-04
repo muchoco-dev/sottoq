@@ -31,7 +31,7 @@ describe("postApprovedAnswers", () => {
         question: { body: "好きな飲み物は？" },
       },
     ]);
-    db.answer.update.mockResolvedValue({});
+    db.answer.updateMany.mockResolvedValue({ count: 1 });
 
     const posted = await postApprovedAnswers({
       db: db as never,
@@ -74,8 +74,8 @@ describe("postApprovedAnswers", () => {
         "> コーヒーです",
       ].join("\n"),
     });
-    expect(db.answer.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+    expect(db.answer.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, status: "approved", postedAt: null },
       data: { postedAt: now },
     });
   });
@@ -96,5 +96,42 @@ describe("postApprovedAnswers", () => {
 
     expect(posted).toBe(0);
     expect(slack.postMessage).not.toHaveBeenCalled();
+  });
+
+  it("clears postedAt when Slack posting fails after claiming the row", async () => {
+    const db = createPrismaMock();
+    db.answer.findMany.mockResolvedValue([
+      {
+        id: 1,
+        body: "水です",
+        isAnonymous: true,
+        answererSlackUserId: null,
+        createdAt: new Date("2026-08-08T00:00:00+09:00"),
+        question: { body: "好きな飲み物は？" },
+      },
+    ]);
+    db.answer.updateMany.mockResolvedValue({ count: 1 });
+    db.answer.update.mockResolvedValue({});
+    const slack = createSlackMock({
+      postMessage: async () => {
+        throw new Error("slack down");
+      },
+    });
+
+    await expect(
+      postApprovedAnswers({
+        db: db as never,
+        slack,
+        config: createConfig(),
+        logger: createLogger(),
+        now: () => now,
+        postIntervalMs: 0,
+      }),
+    ).rejects.toThrow("slack down");
+
+    expect(db.answer.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { postedAt: null },
+    });
   });
 });

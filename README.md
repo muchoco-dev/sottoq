@@ -4,16 +4,16 @@
 
 - 質問者は常に匿名です。質問者の Slack User ID は保存しません
 - 回答者は匿名か記名かを自分で選べます
-- 管理者が質問・回答を承認してから配信・公開します（このリポジトリに管理画面はありません）
+- 管理者が質問・回答を承認してから配信・公開します（管理画面はこのリポジトリにはありません。Admin API を用意しています）
 - ソースは公開し、匿名性の仕組みを誰でも確認できます
 
 ## できること
 
 1. `/ask` で質問を投稿する（承認待ち）
-2. 管理者が DB で質問を承認する
+2. 管理者が質問を承認する（Admin API または DB）
 3. 毎日 9:00 と 20:00（Asia/Tokyo）に、募集中の質問を掲載先チャンネルのメンバーからランダム 5 人へ DM する
 4. 受信者は「回答する」から匿名または記名で回答する（承認待ち）
-5. 管理者が DB で回答を承認する
+5. 管理者が回答を承認する（Admin API または DB）
 6. 毎日 12:00 と 20:30 に、未投稿の承認済み回答を最大 3 件、10 分間隔で公開チャンネルへ投稿する
 7. 作成から 1 週間経過、または却下以外の回答が 5 件集まった時点で募集を終了し、送信先ハッシュを削除する
 
@@ -68,9 +68,28 @@ npm run dev
 docker compose --profile full up --build
 ```
 
+# 管理画面向け Admin API（このリポジトリに管理 UI はありません）
+
+`ADMIN_API_TOKEN` を設定すると、同じポートで `/admin/*` が有効になります。未設定なら `/admin` は 404 です。認証は `Authorization: Bearer <ADMIN_API_TOKEN>`。
+
+| メソッド | パス | 役割 |
+| --- | --- | --- |
+| GET | `/admin/questions` | 一覧。`status` クエリで pending / approved / rejected |
+| POST | `/admin/questions/:id/approve` | `pending` → `approved` |
+| POST | `/admin/questions/:id/reject` | `pending` → `rejected` |
+| POST | `/admin/questions/:id/send` | 募集中の質問を今すぐ最大 5 人へ DM |
+| GET | `/admin/answers` | 一覧。`?status=` 可 |
+| POST | `/admin/answers/:id/approve` | `pending` → `approved` |
+| POST | `/admin/answers/:id/reject` | `pending` → `rejected` |
+| POST | `/admin/answers/:id/post` | 承認済み・未投稿の回答をチャンネルへ即時投稿 |
+
+pending 以外への承認・却下、募集中でない質問への `send`、未承認または投稿済み回答への `post` は 409 です。トークン不一致は 401 です。
+
+即時 DM は次の 9:00 / 20:00 の定期配信を止めません。成功後に定期ジョブが走ると別の 5 人へ追加されます。
+
 ## 管理者操作（DB 直接）
 
-管理画面はありません。MariaDB を直接更新します。
+Admin API を使わず、MariaDB を直接更新しても同じ承認・却下ができます。
 
 ```sql
 -- 未処理の質問
