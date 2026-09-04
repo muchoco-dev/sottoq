@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hmacUserId } from "../anonymity/hmac.js";
-import { sendQuestions } from "./send-questions.js";
+import { sendQuestionById, sendQuestions } from "./send-questions.js";
 import {
   createConfig,
   createLogger,
@@ -151,5 +151,70 @@ describe("sendQuestions", () => {
     expect(slack.conversationsOpen).toHaveBeenCalledWith("U2");
     expect(slack.conversationsOpen).not.toHaveBeenCalledWith("U3");
     expect(slack.postMessage).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("sendQuestionById", () => {
+  it("sends one recruiting question immediately", async () => {
+    const db = createPrismaMock();
+    db.question.findMany.mockResolvedValue([]);
+    db.question.findUnique.mockResolvedValue({
+      id: 1,
+      body: "質問です",
+      status: "approved",
+      closedAt: null,
+      createdAt: now,
+      answers: [],
+      recipients: [],
+    });
+    db.questionRecipient.create.mockResolvedValue({});
+    const slack = createSlackMock({
+      conversationsMembers: async () => ({ memberIds: ["U2"] }),
+      usersList: async () => ({ members: [{ id: "U2" }] }),
+    });
+
+    const result = await sendQuestionById(
+      {
+        db: db as never,
+        slack,
+        config: createConfig({ hmacSecret }),
+        logger: createLogger(),
+        now: () => now,
+        dmIntervalMs: 0,
+        random: () => 0,
+      },
+      1,
+    );
+
+    expect(result.sent).toBe(1);
+    expect(slack.conversationsOpen).toHaveBeenCalledWith("U2");
+  });
+
+  it("rejects questions that are not recruiting", async () => {
+    const db = createPrismaMock();
+    db.question.findMany.mockResolvedValue([]);
+    db.question.findUnique.mockResolvedValue({
+      id: 1,
+      body: "質問です",
+      status: "pending",
+      closedAt: null,
+      createdAt: now,
+      answers: [],
+      recipients: [],
+    });
+
+    await expect(
+      sendQuestionById(
+        {
+          db: db as never,
+          slack: createSlackMock(),
+          config: createConfig(),
+          logger: createLogger(),
+          now: () => now,
+          dmIntervalMs: 0,
+        },
+        1,
+      ),
+    ).rejects.toMatchObject({ status: 409 });
   });
 });

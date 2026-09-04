@@ -1,12 +1,13 @@
 import { createServer } from "node:http";
 import { App, ExpressReceiver } from "@slack/bolt";
+import { attachAdminRoutes, handlePublicHttp } from "./admin/http.js";
 import { loadConfig } from "./config.js";
 import { createPrisma } from "./db/client.js";
 import { registerAnswerHandlers } from "./handlers/answer.js";
 import { registerAskHandlers } from "./handlers/ask.js";
 import { startJobs } from "./jobs/schedule.js";
 import { createSlackApi } from "./slack/api.js";
-import type { Logger } from "./types.js";
+import type { Deps, Logger } from "./types.js";
 
 const logger: Logger = {
   info: (message) => {
@@ -17,15 +18,15 @@ const logger: Logger = {
   },
 };
 
-function startHealthServer(port: number): void {
+function startHttpServer(port: number, deps: Deps): void {
   const server = createServer((req, res) => {
-    if (req.url === "/health") {
-      res.writeHead(200, { "content-type": "application/json" });
-      res.end(JSON.stringify({ ok: true }));
-      return;
-    }
-    res.writeHead(404);
-    res.end();
+    void handlePublicHttp(req, res, deps).catch(() => {
+      deps.logger.error("http request failed");
+      if (!res.headersSent) {
+        res.writeHead(500);
+        res.end();
+      }
+    });
   });
   server.listen(port);
 }
@@ -34,6 +35,7 @@ async function main(): Promise<void> {
   const config = loadConfig();
   const db = createPrisma();
 
+  let receiver: ExpressReceiver | undefined;
   const app = config.socketMode
     ? new App({
         token: config.slackBotToken,
@@ -42,7 +44,7 @@ async function main(): Promise<void> {
         appToken: config.slackAppToken,
       })
     : (() => {
-        const receiver = new ExpressReceiver({
+        receiver = new ExpressReceiver({
           signingSecret: config.slackSigningSecret,
           endpoints: "/slack/events",
         });
@@ -61,10 +63,13 @@ async function main(): Promise<void> {
   registerAskHandlers(app, deps);
   registerAnswerHandlers(app, deps);
   startJobs(deps);
+  if (receiver) {
+    attachAdminRoutes(receiver.router, deps);
+  }
 
   if (config.socketMode) {
     await app.start();
-    startHealthServer(config.port);
+    startHttpServer(config.port, deps);
   } else {
     await app.start(config.port);
   }
