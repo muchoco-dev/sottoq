@@ -47,7 +47,7 @@ openssl rand -hex 32
 4. スラッシュコマンド `/ask`（説明: 匿名で質問する）
 5. Interactivity を有効にする
 6. ローカルは Socket Mode を推奨（App-Level Token に `connections:write`）
-7. 本番は Request URL を `https://<your-domain>/slack/events` にする
+7. 本番は Request URL を `https://<your-domain>/slack/events` にする（Socket Mode オフ）
 8. ワークスペースへインストールし、掲載先チャンネルにボットを招待する
 9. `.env` に `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `SLACK_APP_TOKEN`（Socket Mode 時）, `SLACK_CHANNEL_ID` を入れる
 
@@ -183,6 +183,31 @@ npm run job:close  # 募集終了と送信先ハッシュ削除
 - アプリログに Slack User ID やリクエスト全体は出しません
 
 保存カラムの一覧は `prisma/schema.prisma` で確認できます。
+
+## 本番（同じ VPS）
+
+管理画面は別リポジトリ（`sottoq-admin`）です。同じ Docker ネットワーク `sottoq` でつなぎます。
+
+```bash
+docker network create sottoq
+docker compose --profile full up --build -d
+```
+
+- アプリは `127.0.0.1:3000` のみ。公開 HTTPS は reverse proxy 経由の `/slack/events`
+- MariaDB の 3306 はホストに出さない
+- `SLACK_SOCKET_MODE=0`
+- Slack の Request URL / Interactivity / スラッシュコマンドを `https://<your-domain>/slack/events` にする（Socket Mode はオフ）
+- `ADMIN_API_TOKEN` を設定し、管理画面の `SOTTOQ_API_TOKEN` と揃える
+
+日次バックアップ（スクリプトは本体 compose の親ディレクトリを自動で使う）:
+
+```bash
+chmod +x deploy/backup-db.sh
+# cron 例: 毎日 3:00（BACKUP_DIR を変えたいときだけ環境変数を付ける）
+# 0 3 * * * /path/to/sottoq/deploy/backup-db.sh
+```
+
+既定のダンプ先は `~/.local/share/sottoq/backups/` です。
 
 ## 開発
 
