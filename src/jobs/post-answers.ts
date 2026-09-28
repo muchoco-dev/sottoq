@@ -1,6 +1,6 @@
 import { POST_INTERVAL_MS, POSTS_PER_WINDOW } from "../constants.js";
 import { AdminHttpError } from "../admin/errors.js";
-import { formatChannelPost } from "../posting/format.js";
+import { buildChannelPost } from "../posting/format.js";
 import type { Deps } from "../types.js";
 
 const defaultSleep = (ms: number) =>
@@ -10,6 +10,7 @@ const defaultSleep = (ms: number) =>
 
 type PostableAnswer = {
   id: number;
+  questionId: number;
   body: string;
   isAnonymous: boolean;
   answererSlackUserId: string | null;
@@ -78,7 +79,8 @@ export async function postAnswer(
     return false;
   }
 
-  const text = formatChannelPost({
+  const { text, blocks } = buildChannelPost({
+    questionId: answer.questionId,
     questionBody: answer.question.body,
     answerBody: answer.body,
     isAnonymous: answer.isAnonymous,
@@ -89,6 +91,7 @@ export async function postAnswer(
     await deps.slack.postMessage({
       channel: deps.config.slackChannelId,
       text,
+      blocks,
     });
   } catch (error) {
     await deps.db.answer.update({

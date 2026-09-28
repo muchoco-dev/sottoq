@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { formatChannelPost } from "./format.js";
+import { ACTION_ANSWER_OPEN } from "../constants.js";
+import { buildChannelPost, formatChannelPost } from "./format.js";
 
 describe("formatChannelPost", () => {
   it("formats an anonymous answer", () => {
@@ -86,5 +87,45 @@ describe("formatChannelPost", () => {
         "> A2",
       ].join("\n"),
     );
+  });
+});
+
+describe("buildChannelPost", () => {
+  it("includes the formatted text and この質問に答える button with questionId", () => {
+    const message = buildChannelPost({
+      questionId: 12,
+      questionBody: "好きな飲み物は？",
+      answerBody: "水です",
+      isAnonymous: true,
+      answererSlackUserId: null,
+    });
+    const text = [
+      "そっと届いた質問に、誰かが答えてくれました 🙌",
+      "",
+      "> 好きな飲み物は？",
+      "",
+      "**回答**",
+      "",
+      "> 水です",
+    ].join("\n");
+
+    expect(message.text).toBe(text);
+    expect(message.blocks).toEqual([
+      {
+        type: "section",
+        text: { type: "mrkdwn", text },
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: { type: "plain_text", text: "この質問に答える" },
+            action_id: ACTION_ANSWER_OPEN,
+            value: "12",
+          },
+        ],
+      },
+    ]);
   });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ACTION_ANSWER_OPEN } from "../constants.js";
 import { postApprovedAnswers } from "./post-answers.js";
 import {
   createConfig,
@@ -9,6 +10,26 @@ import {
 
 const now = new Date("2026-08-10T12:00:00+09:00");
 
+function channelBlocks(text: string, questionId: number) {
+  return [
+    {
+      type: "section",
+      text: { type: "mrkdwn", text },
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: { type: "plain_text", text: "この質問に答える" },
+          action_id: ACTION_ANSWER_OPEN,
+          value: String(questionId),
+        },
+      ],
+    },
+  ];
+}
+
 describe("postApprovedAnswers", () => {
   it("posts oldest unposted approved answers, max 3, and formats the intro copy", async () => {
     const db = createPrismaMock();
@@ -16,6 +37,7 @@ describe("postApprovedAnswers", () => {
     db.answer.findMany.mockResolvedValue([
       {
         id: 1,
+        questionId: 10,
         body: "水です",
         isAnonymous: true,
         answererSlackUserId: null,
@@ -24,6 +46,7 @@ describe("postApprovedAnswers", () => {
       },
       {
         id: 2,
+        questionId: 10,
         body: "コーヒーです",
         isAnonymous: false,
         answererSlackUserId: "U123",
@@ -50,29 +73,33 @@ describe("postApprovedAnswers", () => {
         take: 3,
       }),
     );
+    const anonymousText = [
+      "そっと届いた質問に、誰かが答えてくれました 🙌",
+      "",
+      "> 好きな飲み物は？",
+      "",
+      "**回答**",
+      "",
+      "> 水です",
+    ].join("\n");
     expect(slack.postMessage).toHaveBeenNthCalledWith(1, {
       channel: "C123",
-      text: [
-        "そっと届いた質問に、誰かが答えてくれました 🙌",
-        "",
-        "> 好きな飲み物は？",
-        "",
-        "**回答**",
-        "",
-        "> 水です",
-      ].join("\n"),
+      text: anonymousText,
+      blocks: channelBlocks(anonymousText, 10),
     });
+    const namedText = [
+      "そっと届いた質問に、<@U123>さんが答えてくれました 🙌",
+      "",
+      "> 好きな飲み物は？",
+      "",
+      "**回答**",
+      "",
+      "> コーヒーです",
+    ].join("\n");
     expect(slack.postMessage).toHaveBeenNthCalledWith(2, {
       channel: "C123",
-      text: [
-        "そっと届いた質問に、<@U123>さんが答えてくれました 🙌",
-        "",
-        "> 好きな飲み物は？",
-        "",
-        "**回答**",
-        "",
-        "> コーヒーです",
-      ].join("\n"),
+      text: namedText,
+      blocks: channelBlocks(namedText, 10),
     });
     expect(db.answer.updateMany).toHaveBeenCalledWith({
       where: { id: 1, status: "approved", postedAt: null },
@@ -103,6 +130,7 @@ describe("postApprovedAnswers", () => {
     db.answer.findMany.mockResolvedValue([
       {
         id: 1,
+        questionId: 10,
         body: "水です",
         isAnonymous: true,
         answererSlackUserId: null,
